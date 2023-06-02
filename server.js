@@ -6,7 +6,7 @@ I declare that this assignment is my own work in accordance with Seneca  Academi
 Name: _Hui Ding
 Student ID: 119835221
 Date: 2023-05-29
-Cyclic Web App URL: _______________________________________________________
+Cyclic Web App URL: https://eager-bear-pantyhose.cyclic.app/
 GitHub Repository URL: https://github.com/Ivy-ding99/web322-app
 
 
