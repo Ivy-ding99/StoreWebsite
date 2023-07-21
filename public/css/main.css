@@ -3,5 +3,14 @@
             font-family: 'Playfair Display', serif;
             color: rgb(12, 6, 16);
         }
-        
- 
+        .navbar-nav {
+            display: flex;
+            justify-content: flex-end;
+          }
+          
+          .nav-right {
+            margin-left: auto;
+          }
+          
+          
+          
