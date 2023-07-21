@@ -6,7 +6,7 @@ I declare that this assignment is my own work in accordance with Seneca  Academi
 Name: _Hui Ding
 Student ID: 119835221
 Date: 2023-07-21
-Cyclic Web App URL: https://shy-galoshes-bee.cyclic.app/blog
+Cyclic Web App URL: https://ruby-better-hummingbird.cyclic.app/About
 GitHub Repository URL: https://github.com/Ivy-ding99/web322-app.git
 
 
