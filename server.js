@@ -1,11 +1,11 @@
 /*********************************************************************************
 
-WEB322 – Assignment 05
+WEB322 – Assignment 06
 I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part *  of this assignment has been copied manually or electronically from any other source (including 3rd party web sites) or distributed to other students.
 
 Name: _Hui Ding
 Student ID: 119835221
-Date: 2023-07-21
+Date: 2023-08-09
 Cyclic Web App URL: https://ruby-better-hummingbird.cyclic.app/About
 GitHub Repository URL: https://github.com/Ivy-ding99/web322-app.git
 
@@ -470,9 +470,7 @@ app.use(function (req, res) {
 });
 
 // Call this function after http server starts
-function onHttpStart() {
-  console.log(`Express http server listening on ${HTTP_PORT}`);
-}
+
 
   
 // Call the initialize() method from store-service.js to load data
