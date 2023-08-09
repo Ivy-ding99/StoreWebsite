@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap');
+        h2 {
+            font-family: 'Playfair Display', serif;
+            color: rgb(12, 6, 16);
+        }
+
+          .row {
+            max-width: 850px; /* Adjust this value as needed */
+            margin: 0 auto; /* Center the content horizontally */
+            padding: 20px; /* Add padding around the content */
+        }
+          
+        .nav-right {
+          margin-left: auto;
+        } 
+          

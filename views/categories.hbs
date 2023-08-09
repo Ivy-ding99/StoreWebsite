@@ -1,0 +1,37 @@
+<div class="row">
+  <div class="col-md-12">
+    <h2>Categories <a href="/categories/add" class="btn btn-success pull-right">Add Category</a></h2>
+    <hr />
+    <div class="table-responsive">
+      <table class="table">
+        <!-- Table headers -->
+        <tr>
+          <th>Category ID</th>
+          <th>Category Name</th>
+          <th></th> <!-- New column for the "remove" links -->
+        </tr>
+        
+        <!-- Loop through the categories and generate table rows -->
+        {{#each categories}}
+        <tr>
+          <td>{{this.id}}</td>
+          <td>{{this.category}}</td>
+          <td>
+            <!-- Remove category button -->
+            <a href="/categories/delete/{{this.id}}" class="btn btn-danger">remove</a>
+          </td>
+        </tr>
+        {{/each}}
+        
+      </table>
+      
+      <!-- Display a message if there are no categories -->
+      {{#unless categories}}
+      <div class="col-md-12 text-center">
+        <strong>{{message}}</strong>
+      </div>
+      {{/unless}}
+      
+    </div>
+  </div>
+</div>
