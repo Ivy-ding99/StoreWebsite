@@ -12,16 +12,15 @@ var sequelize = new Sequelize('ttnkupls', 'ttnkupls', 'AVnV_lIHsD-__j1sMUjqwiqYN
 });
 
 //define Item Module
-var Item=sequelize.define('Item',{
-  
-body:Sequelize.TEXT,
-tile:Sequelize.STRING,
-postDate:Sequelize.DATE,
-featureImage:Sequelize.STRING,
-published:Sequelize.BOOLEAN,
-price:Sequelize.DOUBLE
-
+var Item = sequelize.define('Item', {
+  featureImage: Sequelize.STRING,
+  title: Sequelize.STRING, // Fix typo here
+  price: Sequelize.DOUBLE,
+  body: Sequelize.TEXT,
+  published: Sequelize.BOOLEAN,
+  postDate: Sequelize.DATE,
 });
+
 
 var Category = sequelize.define('Category', {
   id: {

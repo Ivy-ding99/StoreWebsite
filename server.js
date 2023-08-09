@@ -15,15 +15,17 @@ GitHub Repository URL: https://github.com/Ivy-ding99/web322-app.git
 const path = require('path');
 const express = require('express');
 const app = express();
-const blogServer = require('./blog-service');
+const storeServer = require('./store-service');
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 var HTTP_PORT = process.env.PORT || 8080;
+const authData=require('./auth-service')
 
 const exphbs = require('express-handlebars');
 const Handlebars = require('handlebars');
 const upload = multer(); 
+const clientSessions=require('client-sessions');
 
 app.use(express.urlencoded({extended: true}));
 
@@ -66,12 +68,93 @@ app.use(function(req,res,next){
   app.locals.viewingCategory = req.query.category;
   next();
 });
+//
+app.use(clientSessions({
+  cookieName: 'session',
+  secret: 'your-secret-key',
+  duration: 24 * 60 * 60 * 1000, // 1 day
+  activeDuration: 1000 * 60 * 5 // 5 minutes
+}));
+//Define the middleware to provide the "session" object to all templates:
+app.use((req, res, next) => {
+  res.locals.session = req.session;
+  next();
+});
+//Define the ensureLogin middleware to protect routes:
+const ensureLogin = (req, res, next) => {
+  if (!req.session.user) {
+      res.redirect('/login');
+  } else {
+      next();
+  }
+};
+//// Apply ensureLogin middleware to routes
+app.use('/items', ensureLogin);
+app.use('/categories', ensureLogin);
+app.use('/post', ensureLogin);
+app.use('/category', ensureLogin);
 
+// GET /login
+app.get('/login', (req, res) => {
+  res.render('login'); // Render the login view
+});
 
+// GET /register
+app.get('/register', (req, res) => {
+  res.render('register'); // Render the register view
+});
+
+// POST /register
+app.post('/register', (req, res) => {
+  const userData = {
+    userName: req.body.userName,
+    email: req.body.email,
+    password: req.body.password,
+    password2: req.body.password2, 
+    userAgent: req.get('User-Agent')
+  };
+
+  authData.registerUser(userData)
+    .then(() => {
+      res.render('register', { successMessage: 'User created' });
+    })
+    .catch((err) => {
+      res.render('register', { errorMessage: err, userName: req.body.userName });
+    });
+});
+
+// POST /login
+app.post('/login', (req, res) => {
+  req.body.userAgent = req.get('User-Agent');
+
+  authData.checkUser(req.body)
+    .then((user) => {
+      req.session.user = {
+        userName: user.userName,
+        email: user.email,
+        loginHistory: user.loginHistory
+      };
+      res.redirect('/items');
+    })
+    .catch((err) => {
+      res.render('login', { errorMessage: err, userName: req.body.userName });
+    });
+});
+
+// GET /logout
+app.get('/logout', ensureLogin,(req, res) => {
+  req.session.reset(); // Reset the session
+  res.redirect('/'); // Redirect to the home page
+});
+
+// GET /userHistory
+app.get('/userHistory', ensureLogin, (req, res) => {
+  res.render('userHistory'); // Render the userHistory view
+});
 
 // Setup a route to redirect to the default about page
 app.get('/', function (req, res) {
-  res.redirect('/blog');});
+  res.redirect('/store');});
 
 // Setup the about route
 
@@ -85,13 +168,13 @@ app.get('/about', function (req, res) {
 
 // Add route to process the submitted category data
 
-app.post('/categories/add', (req, res) => {
+app.post('/categories/add',ensureLogin, (req, res) => {
   console.log(req.body); // Add this line to log the req.body object
   const categoryData = {
     category: req.body.category
   };
 
-  blogServer.addCategory(categoryData)
+  storeServer.addCategory(categoryData)
     .then(() => {
       res.redirect('/categories'); // Redirect to the categories view
     })
@@ -100,10 +183,10 @@ app.post('/categories/add', (req, res) => {
     });
 });
 
-// Public-facing route: /blog
+// Public-facing route: /store
 
 
-app.get("/blog", async (req, res) => {
+app.get("/store", ensureLogin,async (req, res) => {
   // Declare an object to store properties for the view
   let viewData = {};
 
@@ -114,10 +197,10 @@ app.get("/blog", async (req, res) => {
     // if there's a "category" query, filter the returned items by category
     if (req.query.category) {
       // Obtain the published "items" by category
-      items = await blogServer.getPublishedItemsByCategory(req.query.category);
+      items = await storeServer.getPublishedItemsByCategory(req.query.category);
     } else {
       // Obtain the published "items"
-      items = await blogServer.getPublishedItems();
+      items = await storeServer.getPublishedItems();
         }
 
     // sort the published items by postDate
@@ -137,18 +220,18 @@ app.get("/blog", async (req, res) => {
 
   try {
     // Obtain the full list of "categories"
-    let categories = await blogServer.getCategories();
+    let categories = await storeServer.getCategories();
     // store the "categories" data in the viewData object (to be passed to the view)
     viewData.categories = categories;
   } catch (err) {
     viewData.categoriesMessage = "no results";  }
 
-  // render the "blog" view with all of the data (viewData)
-  res.render("blog", { data: viewData });
+  // render the "store" view with all of the data (viewData)
+  res.render("store", { data: viewData });
 });
 
-//Shop/:id Route
-app.get('/blog/:id', async (req, res) => {
+//store/:id Route
+app.get('/store/:id', ensureLogin,async (req, res) => {
 
   // Declare an object to store properties for the view
   let viewData = {};
@@ -161,10 +244,10 @@ app.get('/blog/:id', async (req, res) => {
       // if there's a "category" query, filter the returned items by category
       if(req.query.category){
           // Obtain the published "items" by category
-          items = await blogServer.getPublishedItemsByCategory(req.query.category);
+          items = await storeServer.getPublishedItemsByCategory(req.query.category);
       }else{
           // Obtain the published "items"
-          items = await blogServer.getPublishedItems();
+          items = await storeServer.getPublishedItems();
       }
 
       // sort the published items by postDate
@@ -179,14 +262,14 @@ app.get('/blog/:id', async (req, res) => {
 
   try{
       // Obtain the Item by "id"
-      viewData.Item= await blogServer.getItemById(req.params.id);
+      viewData.Item= await storeServer.getItemById(req.params.id);
   }catch(err){
       viewData.message = "no results"; 
   }
 
   try{
       // Obtain the full list of "categories"
-      let categories = await blogServer.getCategories();
+      let categories = await storeServer.getCategories();
 
       // store the "categories" data in the viewData object (to be passed to the view)
       viewData.categories = categories;
@@ -194,17 +277,17 @@ app.get('/blog/:id', async (req, res) => {
       viewData.categoriesMessage = "no results"
   }
 
-  // render the "blog" view with all of the data (viewData)
-  res.render("blog", {data: viewData})
+  // render the "store" view with all of the data (viewData)
+  res.render("store", {data: viewData})
 });
 
 // Route: /items
-app.get('/items', (req, res) => {
+app.get('/items', ensureLogin,(req, res) => {
   const category = parseInt(req.query.category);
   const minDate = req.query.minDate;
 
   if (category) {
-    blogServer.getItemsByCategory(category)
+    storeServer.getItemsByCategory(category)
       .then((items) => {
         if (items.length > 0) {
           res.render("items", { items: items });
@@ -216,7 +299,7 @@ app.get('/items', (req, res) => {
         res.render("items", { message: err });
       });
   } else if (minDate) {
-    blogServer.getItemsByMinDate(minDate)
+    storeServer.getItemsByMinDate(minDate)
       .then((items) => {
         if (items.length > 0) {
           res.render("items", { items: items });
@@ -228,7 +311,7 @@ app.get('/items', (req, res) => {
         res.render("items", { message: err });
       });
   } else {
-    blogServer.getAllItems()
+    storeServer.getAllItems()
       .then((items) => {
         if (items.length > 0) {
           res.render("items", { items: items });
@@ -244,11 +327,11 @@ app.get('/items', (req, res) => {
 
 
 // Public-facing route: /getItemByID
-app.get('/Item/:id',(req,res)=>{
+app.get('/item/:id',ensureLogin,(req,res)=>{
   const itemId = parseInt(req.params.id);
-blogServer.getItemById(itemId)
-.then((Item) => {
-  res.json(Item);
+storeServer.getItemById(itemId)
+.then((item) => {
+  res.json(item);
 })
 .catch((err) => {
   res.json({ message: err });
@@ -262,8 +345,8 @@ app.get('/categories/add', (req, res) => {
 });
 
 // Route: /categories
-app.get('/categories', (req, res) => {
-  blogServer.getCategories()
+app.get('/categories',ensureLogin,(req, res) => {
+  storeServer.getCategories()
     .then((categories) => {
       if (categories.length > 0) {
         res.render("categories", { categories: categories });
@@ -276,10 +359,20 @@ app.get('/categories', (req, res) => {
     });
 });
 
-
-
-
-app.post('/items/add', upload.single("featureImage"), (req, res) => {
+//
+app.get('/items/add', ensureLogin, (req, res) => {
+  storeServer.getCategories()
+    .then((categories) => {
+      res.render('addItem', { categories: categories });
+    })
+    .catch((error) => {
+      console.error('Error fetching categories:', error);
+      res.render('addItem', { categories: [] });
+    });
+});
+//get item from user
+app.post('/items/add',ensureLogin, upload.single("featureImage"), (req, res) => {
+  res.render('addItem');
   if (req.file) {
     let streamUpload = (req) => {
       return new Promise((resolve, reject) => {
@@ -323,11 +416,12 @@ app.post('/items/add', upload.single("featureImage"), (req, res) => {
       postDate: new Date().toISOString().split('T')[0],
       featureImage: imageUrl,
       title: req.body.title,
+      price: req.body.price,
       body: req.body.body,
       published: (req.body.published) ? true : false
     };
     
-    blogServer.addCategory(itemData)
+    storeServer.addCategory(itemData)
       .then((addedCategory) => {
         console.log('Category added:', addedCategory);
         res.redirect('/categories');
@@ -340,28 +434,12 @@ app.post('/items/add', upload.single("featureImage"), (req, res) => {
   }
 });
 
-// GET route for adding an item
-app.get('/items/add', (req, res) => {
-  blogServer.getCategories()
-    .then((categories) => {
-      res.render('addItem', { categories: categories });
-    })
-    .catch(() => {
-      res.render('addItem', { categories: [] });
-    });
-});
-
-
-
-
-
-
 // Add route to delete a category by id
-app.get('/categories/delete/:id', (req, res) => {
+app.get('/categories/delete/:id',ensureLogin,(req, res) => {
   const categoryId = req.params.id;
 
-  // Call the deleteCategoryById function from your blog-service
-  blogServer.deleteCategoryById(categoryId)
+  // Call the deleteCategoryById function from your store-service
+  storeServer.deleteCategoryById(categoryId)
     .then(() => {
       res.redirect('/categories'); // Redirect to the categories view
     })
@@ -371,11 +449,11 @@ app.get('/categories/delete/:id', (req, res) => {
 });
 
 // Add route to delete a Item by id
-app.get('/items/delete/:id', (req, res) => {
+app.get('/items/delete/:id',ensureLogin, (req, res) => {
   const itemId = req.params.id;
 
   // Call the deleteItemById function 
-  blogServer.deleteItemById(itemId)
+  storeServer.deleteItemById(itemId)
     .then(() => {
       res.redirect('/items'); // Redirect to the items view
     })
@@ -390,17 +468,21 @@ app.get('/items/delete/:id', (req, res) => {
 app.use(function (req, res) {
   res.status(404).render('404');
 });
-// Call the initialize() method from store-service.js to load data
+
 // Call this function after http server starts
 function onHttpStart() {
   console.log(`Express http server listening on ${HTTP_PORT}`);
 }
-blogServer.initialize()
-  .then(() => {
-    // Start the server only if initialization is successful
-    app.listen(HTTP_PORT, onHttpStart);
-  })
-  .catch((err) => {
-    // Output the error to the console if initialization fails
-    console.error('Error initializing data:', err);
-  });
+
+  
+// Call the initialize() method from store-service.js to load data
+storeServer.initialize()
+.then(authData.initialize)
+.then(() => {
+    app.listen(HTTP_PORT, () => {
+        console.log("app listening on: " + HTTP_PORT);
+    });
+})
+.catch((err) => {
+    console.log("unable to start server: " + err);
+});

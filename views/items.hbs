@@ -15,11 +15,11 @@
         </tr>
          {{#each items}}
      <tr>
-      <td>{{title}}</td>
-      <td>{{body}}</td>
-      <td>{{postDate}}</td> 
-      <td>{{category}}</td>
-      <td>{{published}}</td>
+      <td>{{this.title}}</td>
+      <td>{{this.body}}</td>
+      <td>{{this.postDate}}</td> 
+      <td>{{this.category}}</td>
+      <td>{{this.published}}</td>
       <td>
         <a href="/items/delete/{{id}}" class="btn btn-danger">Remove</a>
       </td>
