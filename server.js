@@ -29,6 +29,18 @@ const clientSessions=require('client-sessions');
 
 app.use(express.urlencoded({extended: true}));
 
+  
+// Call the initialize() method from store-service.js to load data
+//our server also requires authData to be working properly, we must add its initialize method
+storeData.initialize()
+.then(authData.initialize)
+.then(function(){
+    app.listen(HTTP_PORT, function(){
+        console.log("app listening on: " + HTTP_PORT)
+    });
+}).catch(function(err){
+    console.log("unable to start server: " + err);
+});
 
 //app.engine('.hbs', exphbs.engine({ extname: '.hbs' }));
 //for adding custom "helpers"
@@ -472,15 +484,8 @@ app.use(function (req, res) {
 // Call this function after http server starts
 
 
-  
-// Call the initialize() method from store-service.js to load data
-storeServer.initialize()
-.then(authData.initialize)
-.then(() => {
-    app.listen(HTTP_PORT, () => {
-        console.log("app listening on: " + HTTP_PORT);
-    });
-})
-.catch((err) => {
-    console.log("unable to start server: " + err);
-});
+
+
+
+
+
