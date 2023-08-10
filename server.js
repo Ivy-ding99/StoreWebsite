@@ -45,17 +45,6 @@ storeServer.initialize()
 
 
 
-// Import necessary modules and set up middleware here
-
-storeData.initialize()
-.then(() => authData.initialize())
-    .then(function(){
-      app.listen(HTTP_PORT, function(){
-          console.log("app listening on: " + HTTP_PORT)
-      });
-  }).catch((err) => {
-        console.log("Unable to start server: " + err);
-    });
     
 
 
