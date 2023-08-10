@@ -19,7 +19,7 @@ const storeServer = require('./store-service');
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
-var HTTP_PORT = process.env.PORT || 8080;
+var HTTP_PORT = process.env.PORT || 3000;
 const authData=require('./auth-service')
 
 const exphbs = require('express-handlebars');
