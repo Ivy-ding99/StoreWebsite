@@ -19,7 +19,7 @@ const storeServer = require('./store-service');
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
-var HTTP_PORT = process.env.PORT || 3000;
+var HTTP_PORT = process.env.PORT || 8080;
 const authData=require('./auth-service')
 
 const exphbs = require('express-handlebars');
@@ -27,21 +27,39 @@ const Handlebars = require('handlebars');
 const upload = multer(); 
 const clientSessions=require('client-sessions');
 
-app.use(express.urlencoded({extended: true}));
+
 
   
 // Call the initialize() method from store-service.js to load data
 //our server also requires authData to be working properly, we must add its initialize method
-storeData.initialize()
-.then(authData.initialize)
-.then(function(){
-    app.listen(HTTP_PORT, function(){
-        console.log("app listening on: " + HTTP_PORT)
+storeServer.initialize()
+.then(() => authData.initialize())
+.then(() => {
+    app.listen(HTTP_PORT, () => {
+        console.log("app listening on: " + HTTP_PORT);
     });
-}).catch(function(err){
+}).catch((err) => {
     console.log("unable to start server: " + err);
 });
 
+
+
+
+// Import necessary modules and set up middleware here
+
+storeData.initialize()
+.then(() => authData.initialize())
+    .then(function(){
+      app.listen(HTTP_PORT, function(){
+          console.log("app listening on: " + HTTP_PORT)
+      });
+  }).catch((err) => {
+        console.log("Unable to start server: " + err);
+    });
+    
+
+
+app.use(express.urlencoded({extended: true}));
 //app.engine('.hbs', exphbs.engine({ extname: '.hbs' }));
 //for adding custom "helpers"
 app.engine('.hbs', exphbs.engine({ 
